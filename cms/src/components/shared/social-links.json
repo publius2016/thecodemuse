@@ -1,0 +1,34 @@
+{
+  "collectionName": "components_shared_social_links",
+  "info": {
+    "displayName": "Social Links",
+    "description": "Social media links for authors"
+  },
+  "options": {},
+  "attributes": {
+    "github": {
+      "type": "string",
+      "description": "GitHub profile URL"
+    },
+    "linkedin": {
+      "type": "string",
+      "description": "LinkedIn profile URL"
+    },
+    "twitter": {
+      "type": "string",
+      "description": "Twitter/X profile URL"
+    },
+    "website": {
+      "type": "string",
+      "description": "Personal website URL"
+    },
+    "instagram": {
+      "type": "string",
+      "description": "Instagram profile URL"
+    },
+    "youtube": {
+      "type": "string",
+      "description": "YouTube channel URL"
+    }
+  }
+} 
