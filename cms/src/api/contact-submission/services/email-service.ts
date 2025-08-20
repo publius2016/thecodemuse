@@ -14,30 +14,6 @@ const emailConfig = {
     },
   },
   
-  // Production settings (real email service)
-  production: {
-    provider: 'sendgrid', // You can change this to: 'gmail', 'mailgun', 'aws-ses', etc.
-    host: 'smtp.sendgrid.net',
-    port: 587,
-    secure: false,
-    auth: {
-      user: 'apikey', // For SendGrid, this is always 'apikey'
-      pass: process.env.SENDGRID_API_KEY || 'your-sendgrid-api-key-here',
-    },
-  },
-  
-  // Gmail settings (alternative)
-  gmail: {
-    provider: 'gmail',
-    host: 'smtp.gmail.com',
-    port: 587,
-    secure: false,
-    auth: {
-      user: process.env.GMAIL_USER || 'your-email@gmail.com',
-      pass: process.env.GMAIL_APP_PASSWORD || 'your-gmail-app-password',
-    },
-  },
-  
   // Mailgun settings (alternative)
   mailgun: {
     provider: 'mailgun',
@@ -57,26 +33,40 @@ const getEnvironment = () => {
 };
 
 // Create a transporter based on environment
-const createTransporter = () => {
+const createTransporter = (emailType = 'default') => {
   const env = getEnvironment();
   
-  // For development, use ethereal email (fake SMTP)
+  // For development, use ethereal email (fake SMTP) by default
   if (env === 'development') {
-    console.log('Email config:', process.env.MAILGUN_USER);
-    return nodemailer.createTransport(emailConfig.mailgun);
+    // Check if we want to use real email service even in development
+    const useRealEmail = process.env.USE_REAL_EMAIL_IN_DEV === 'true';
+    
+    if (useRealEmail) {
+      const provider = process.env.EMAIL_PROVIDER || 'mailgun';
+      console.log(`Development mode using real email provider: ${provider}`);
+      
+      switch (provider) {
+        case 'mailgun':
+          return nodemailer.createTransport(emailConfig.mailgun);
+        default:
+          return nodemailer.createTransport(emailConfig.development);
+      }
+    } else {
+      console.log('Development mode using Ethereal email (fake SMTP)');
+      return nodemailer.createTransport(emailConfig.development);
+    }
   }
   
   // For production, use the configured provider
-  const provider = process.env.EMAIL_PROVIDER || 'sendgrid';
+  const provider = process.env.EMAIL_PROVIDER || 'mailgun';
+  console.log(`Production mode using email provider: ${provider}`);
   
   switch (provider) {
-    case 'gmail':
-      return nodemailer.createTransport(emailConfig.gmail);
     case 'mailgun':
       return nodemailer.createTransport(emailConfig.mailgun);
-    case 'sendgrid':
+
     default:
-      return nodemailer.createTransport(emailConfig.production);
+      return nodemailer.createTransport(emailConfig.development);
   }
 };
 
@@ -85,13 +75,25 @@ const emailService = {
   async sendWelcomeEmail(contactData: any) {
     const { name, email, subject, message } = contactData;
     try {
-        console.log('Sending welcome email...');
-      const transporter = createTransporter();
+      console.log('Sending welcome email...');
+      console.log('Welcome email data:', { name, email, subject, message });
+      
+      const transporter = createTransporter('welcome');
+      console.log('Transporter created successfully');
+      
+      const fromEmail = process.env.FROM_EMAIL || 'hello@thecodemuse.com';
+      console.log('From email:', fromEmail);
       
       const emailTemplate = {
-        from: process.env.FROM_EMAIL || 'hello@thecodemuse.com',
+        from: `"The Code Muse" <${fromEmail}>`,
         to: email,
         subject: 'Thank you for contacting The Code Muse!',
+        headers: {
+          'List-Unsubscribe': `<mailto:unsubscribe@thecodemuse.com?subject=unsubscribe>`,
+          'X-Mailer': 'The Code Muse Contact Form',
+          'X-Priority': '3',
+          'X-MSMail-Priority': 'Normal'
+        },
         html: `
           <!DOCTYPE html>
           <html>
@@ -196,18 +198,28 @@ const emailService = {
         `,
       };
 
+      console.log('Attempting to send welcome email...');
       const info = await transporter.sendMail(emailTemplate);
       console.log('Welcome email sent successfully:', info.messageId);
       
       // For development, show the preview URL
       if (getEnvironment() === 'development') {
-        console.log('📧 Email Preview URL:', nodemailer.getTestMessageUrl(info));
+        const previewUrl = nodemailer.getTestMessageUrl(info);
+        if (previewUrl) {
+          console.log('📧 Email Preview URL:', previewUrl);
+        }
       }
       
       return { success: true, messageId: info.messageId };
       
     } catch (error) {
       console.error('Failed to send welcome email:', error);
+      console.error('Error details:', {
+        message: error.message,
+        code: error.code,
+        command: error.command,
+        response: error.response
+      });
       return { success: false, error: error.message };
     }
   },
@@ -216,13 +228,21 @@ const emailService = {
     const { name, email, subject, message, documentId, createdAt, ipAddress, userAgent } = submissionData;
     
     try {
-        console.log('Sending admin notification...');
-      const transporter = createTransporter();
+      console.log('Sending admin notification...');
+      console.log('Admin notification data:', { name, email, subject, message, documentId });
+      
+      const transporter = createTransporter('admin');
+      console.log('Admin transporter created successfully');
       
       const emailTemplate = {
-        from: process.env.FROM_EMAIL || 'hello@thecodemuse.com',
+        from: `"The Code Muse Contact Form" <${process.env.FROM_EMAIL || 'hello@thecodemuse.com'}>`,
         to: process.env.ADMIN_EMAIL || 'manuelsalcido2012@gmail.com',
         subject: `New Contact Form Submission: ${subject}`,
+        headers: {
+          'X-Mailer': 'The Code Muse Contact Form',
+          'X-Priority': '1',
+          'X-MSMail-Priority': 'High'
+        },
         html: `
           <!DOCTYPE html>
           <html>
