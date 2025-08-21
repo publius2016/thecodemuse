@@ -482,6 +482,84 @@ export interface ApiContactSubmissionContactSubmission
   };
 }
 
+export interface ApiNewsletterSignupNewsletterSignup
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'newsletter_signups';
+  info: {
+    description: 'Newsletter subscription management with comprehensive tracking and compliance features';
+    displayName: 'Newsletter Signup';
+    pluralName: 'newsletter-signups';
+    singularName: 'newsletter-signup';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    consent: Schema.Attribute.Component<'shared.consent-tracking', false> &
+      Schema.Attribute.Required;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    email: Schema.Attribute.Email &
+      Schema.Attribute.Required &
+      Schema.Attribute.Unique;
+    firstName: Schema.Attribute.String &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 100;
+      }>;
+    ipAddress: Schema.Attribute.String &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 45;
+      }>;
+    lastName: Schema.Attribute.String &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 100;
+      }>;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::newsletter-signup.newsletter-signup'
+    > &
+      Schema.Attribute.Private;
+    location: Schema.Attribute.Component<'shared.location', false>;
+    preferences: Schema.Attribute.Component<
+      'shared.newsletter-preferences',
+      false
+    >;
+    publishedAt: Schema.Attribute.DateTime;
+    source: Schema.Attribute.Enumeration<
+      [
+        'blog_post',
+        'sticky_header',
+        'footer',
+        'popup',
+        'landing_page',
+        'api',
+        'manual',
+        'import',
+      ]
+    > &
+      Schema.Attribute.Required;
+    sourceUrl: Schema.Attribute.Text;
+    status: Schema.Attribute.Enumeration<
+      ['pending', 'active', 'unsubscribed', 'bounced', 'complained', 'deleted']
+    > &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<'pending'>;
+    subscriptionDate: Schema.Attribute.DateTime & Schema.Attribute.Required;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    userAgent: Schema.Attribute.Text;
+    verificationExpires: Schema.Attribute.DateTime;
+    verificationToken: Schema.Attribute.String &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 255;
+      }>;
+    verified: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
+  };
+}
+
 export interface ApiPagePage extends Struct.CollectionTypeSchema {
   collectionName: 'pages';
   info: {
@@ -1101,6 +1179,7 @@ declare module '@strapi/strapi' {
       'api::author.author': ApiAuthorAuthor;
       'api::category.category': ApiCategoryCategory;
       'api::contact-submission.contact-submission': ApiContactSubmissionContactSubmission;
+      'api::newsletter-signup.newsletter-signup': ApiNewsletterSignupNewsletterSignup;
       'api::page.page': ApiPagePage;
       'api::post.post': ApiPostPost;
       'api::tag.tag': ApiTagTag;

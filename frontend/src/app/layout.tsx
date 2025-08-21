@@ -4,6 +4,7 @@ import "./globals.css";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { ApolloWrapper } from "@/components/providers/apollo-provider";
+import NewsletterFAB from "@/components/newsletter/NewsletterFAB";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -60,6 +61,7 @@ export default function RootLayout({
               {children}
             </main>
             <Footer />
+            <NewsletterFAB />
           </div>
         </ApolloWrapper>
       </body>

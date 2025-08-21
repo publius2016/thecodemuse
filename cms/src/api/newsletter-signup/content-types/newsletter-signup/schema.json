@@ -1,0 +1,109 @@
+{
+  "kind": "collectionType",
+  "collectionName": "newsletter_signups",
+  "info": {
+    "singularName": "newsletter-signup",
+    "pluralName": "newsletter-signups",
+    "displayName": "Newsletter Signup",
+    "description": "Newsletter subscription management with comprehensive tracking and compliance features"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "email": {
+      "type": "email",
+      "required": true,
+      "unique": true,
+      "description": "Subscriber's email address"
+    },
+    "firstName": {
+      "type": "string",
+      "maxLength": 100,
+      "description": "Subscriber's first name (optional)"
+    },
+    "lastName": {
+      "type": "string",
+      "maxLength": 100,
+      "description": "Subscriber's last name (optional)"
+    },
+    "status": {
+      "type": "enumeration",
+      "enum": [
+        "pending",
+        "active",
+        "unsubscribed",
+        "bounced",
+        "complained",
+        "deleted"
+      ],
+      "default": "pending",
+      "required": true,
+      "description": "Current subscription status"
+    },
+    "source": {
+      "type": "enumeration",
+      "enum": [
+        "blog_post",
+        "sticky_header",
+        "footer",
+        "popup",
+        "landing_page",
+        "api",
+        "manual",
+        "import"
+      ],
+      "required": true,
+      "description": "Where the signup originated from"
+    },
+    "sourceUrl": {
+      "type": "text",
+      "description": "URL where the signup occurred"
+    },
+    "ipAddress": {
+      "type": "string",
+      "maxLength": 45,
+      "description": "IP address of the signup (for compliance)"
+    },
+    "userAgent": {
+      "type": "text",
+      "description": "User agent string for device/browser tracking"
+    },
+    "subscriptionDate": {
+      "type": "datetime",
+      "required": true,
+      "description": "When the subscription was created"
+    },
+    "verified": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether email has been verified via double opt-in"
+    },
+    "verificationToken": {
+      "type": "string",
+      "maxLength": 255,
+      "description": "Token for email verification"
+    },
+    "verificationExpires": {
+      "type": "datetime",
+      "description": "When verification token expires"
+    },
+    "consent": {
+      "type": "component",
+      "component": "shared.consent-tracking",
+      "required": true,
+      "description": "Consent and compliance tracking"
+    },
+    "preferences": {
+      "type": "component",
+      "component": "shared.newsletter-preferences",
+      "description": "User's newsletter preferences and interests"
+    },
+    "location": {
+      "type": "component",
+      "component": "shared.location",
+      "description": "Geographic location data if available"
+    }
+  }
+}

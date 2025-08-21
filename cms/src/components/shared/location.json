@@ -1,0 +1,38 @@
+{
+  "collectionName": "components_shared_locations",
+  "info": {
+    "displayName": "Location",
+    "description": "Geographic location data for newsletter subscribers"
+  },
+  "options": {},
+  "attributes": {
+    "country": {
+      "type": "string",
+      "maxLength": 100,
+      "description": "Country name or code"
+    },
+    "region": {
+      "type": "string",
+      "maxLength": 100,
+      "description": "State, province, or region"
+    },
+    "city": {
+      "type": "string",
+      "maxLength": 100,
+      "description": "City name"
+    },
+    "timezone": {
+      "type": "string",
+      "maxLength": 50,
+      "description": "Timezone identifier (e.g., America/New_York)"
+    },
+    "latitude": {
+      "type": "decimal",
+      "description": "Latitude coordinate if available"
+    },
+    "longitude": {
+      "type": "decimal",
+      "description": "Longitude coordinate if available"
+    }
+  }
+}

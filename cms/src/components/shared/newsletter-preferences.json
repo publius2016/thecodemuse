@@ -1,0 +1,97 @@
+{
+  "collectionName": "components_shared_newsletter_preferences",
+  "info": {
+    "displayName": "Newsletter Preferences",
+    "description": "User preferences and interests for newsletter content"
+  },
+  "options": {},
+  "attributes": {
+    "frequency": {
+      "type": "enumeration",
+      "enum": [
+        "weekly",
+        "biweekly",
+        "monthly",
+        "quarterly"
+      ],
+      "default": "weekly",
+      "description": "Preferred newsletter frequency"
+    },
+    "categories": {
+      "type": "json",
+      "description": "Array of content categories the user is interested in"
+    },
+    "topics": {
+      "type": "json",
+      "description": "Specific topics or tags the user wants to receive"
+    },
+    "excludeTopics": {
+      "type": "json",
+      "description": "Topics the user wants to avoid"
+    },
+    "format": {
+      "type": "enumeration",
+      "enum": [
+        "html",
+        "text",
+        "both"
+      ],
+      "default": "html",
+      "description": "Preferred email format"
+    },
+    "language": {
+      "type": "string",
+      "maxLength": 10,
+      "default": "en",
+      "description": "Preferred language for newsletters"
+    },
+    "timeOfDay": {
+      "type": "enumeration",
+      "enum": [
+        "morning",
+        "afternoon",
+        "evening",
+        "anytime"
+      ],
+      "default": "morning",
+      "description": "Preferred time to receive emails"
+    },
+    "dayOfWeek": {
+      "type": "enumeration",
+      "enum": [
+        "monday",
+        "tuesday",
+        "wednesday",
+        "thursday",
+        "friday",
+        "saturday",
+        "sunday",
+        "anyday"
+      ],
+      "default": "monday",
+      "description": "Preferred day to receive newsletters"
+    },
+    "maxEmailsPerWeek": {
+      "type": "integer",
+      "min": 1,
+      "max": 7,
+      "default": 3,
+      "description": "Maximum number of emails per week"
+    },
+    "includePromotions": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether to include promotional content"
+    },
+    "includeProductUpdates": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether to include product updates"
+    },
+    "includeBlogPosts": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether to include blog post notifications"
+    }
+  }
+}

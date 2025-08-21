@@ -1,0 +1,126 @@
+{
+  "collectionName": "components_shared_consent_trackings",
+  "info": {
+    "displayName": "Consent Tracking",
+    "description": "GDPR and compliance consent tracking for newsletter subscribers"
+  },
+  "options": {},
+  "attributes": {
+    "marketingConsent": {
+      "type": "boolean",
+      "required": true,
+      "description": "Explicit consent for marketing emails"
+    },
+    "consentDate": {
+      "type": "datetime",
+      "required": true,
+      "description": "When consent was given"
+    },
+    "consentVersion": {
+      "type": "string",
+      "maxLength": 50,
+      "required": true,
+      "description": "Version of privacy policy/terms when consent was given"
+    },
+    "consentSource": {
+      "type": "string",
+      "maxLength": 200,
+      "required": true,
+      "description": "URL or location where consent was given"
+    },
+    "ipAddress": {
+      "type": "string",
+      "maxLength": 45,
+      "description": "IP address when consent was given"
+    },
+    "userAgent": {
+      "type": "text",
+      "description": "User agent when consent was given"
+    },
+    "gdprConsent": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether GDPR consent was explicitly given"
+    },
+    "canadaAntiSpamConsent": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether CASL consent was explicitly given"
+    },
+    "californiaPrivacyConsent": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether CCPA consent was explicitly given"
+    },
+    "doubleOptIn": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether double opt-in is required"
+    },
+    "optInMethod": {
+      "type": "enumeration",
+      "enum": [
+        "checkbox",
+        "button",
+        "form_submission",
+        "api",
+        "import",
+        "manual"
+      ],
+      "required": true,
+      "description": "How the user opted in"
+    },
+    "privacyPolicyUrl": {
+      "type": "string",
+      "maxLength": 500,
+      "description": "URL of privacy policy shown during signup"
+    },
+    "termsOfServiceUrl": {
+      "type": "string",
+      "maxLength": 500,
+      "description": "URL of terms of service shown during signup"
+    },
+    "withdrawalDate": {
+      "type": "datetime",
+      "description": "When consent was withdrawn"
+    },
+    "withdrawalMethod": {
+      "type": "enumeration",
+      "enum": [
+        "unsubscribe_link",
+        "email_request",
+        "admin_panel",
+        "api",
+        "automatic"
+      ],
+      "description": "How consent was withdrawn"
+    },
+    "withdrawalReason": {
+      "type": "text",
+      "description": "Reason for withdrawing consent if provided"
+    },
+    "dataRetentionConsent": {
+      "type": "boolean",
+      "default": true,
+      "description": "Consent for data retention beyond immediate needs"
+    },
+    "thirdPartySharingConsent": {
+      "type": "boolean",
+      "default": false,
+      "description": "Consent for sharing data with third parties"
+    },
+    "analyticsConsent": {
+      "type": "boolean",
+      "default": true,
+      "description": "Consent for analytics and tracking"
+    },
+    "lastConsentUpdate": {
+      "type": "datetime",
+      "description": "Last time consent was updated or reaffirmed"
+    },
+    "consentHistory": {
+      "type": "json",
+      "description": "History of consent changes for audit purposes"
+    }
+  }
+}

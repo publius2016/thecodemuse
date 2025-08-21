@@ -9,6 +9,7 @@ import { notFound } from 'next/navigation';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeHighlight from 'rehype-highlight';
+import BlogPostNewsletterSignup from '@/components/newsletter/BlogPostNewsletterSignup';
 
 interface PostPageProps {
   params: Promise<{
@@ -279,6 +280,11 @@ function PostPageClient({ slug }: { slug: string }) {
             </div>
           </div>
         )}
+
+        {/* Newsletter Signup */}
+        <BlogPostNewsletterSignup 
+          postTitle={post.title}
+        />
       </article>
     </div>
   );
