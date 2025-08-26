@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 
 interface NewsletterSignupFormProps {
-  source: 'sticky_header' | 'blog_post' | 'footer' | 'popup';
+  source: 'sticky_header' | 'blog_post' | 'footer' | 'popup' | 'homepage';
   className?: string;
   variant?: 'default' | 'compact' | 'expanded';
 }
@@ -60,13 +60,16 @@ export default function NewsletterSignupForm({
     setFormState(prev => ({ ...prev, isSubmitting: true, error: null }));
 
     try {
-      const response = await fetch('/api/newsletter-signups', {
+      const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || 'http://localhost:1337';
+      const response = await fetch(`${strapiUrl}/api/newsletter-signups`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          ...formData,
+          email: formData.email,
+          firstName: formData.firstName,
+          lastName: formData.lastName,
           source,
           sourceUrl: window.location.href
         })
@@ -125,7 +128,7 @@ export default function NewsletterSignupForm({
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1 text-left">
               Email Address *
             </label>
             <input
@@ -144,7 +147,7 @@ export default function NewsletterSignupForm({
           {variant !== 'compact' && (
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-1 text-left">
                   First Name
                 </label>
                 <input
@@ -159,7 +162,7 @@ export default function NewsletterSignupForm({
                 />
               </div>
               <div>
-                <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-1 text-left">
                   Last Name
                 </label>
                 <input

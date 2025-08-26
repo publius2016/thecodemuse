@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { ArrowRight, BookOpen, Code, Zap } from 'lucide-react';
+import NewsletterSignupForm from '@/components/newsletter/NewsletterSignupForm';
 
 export default function Home() {
   return (
@@ -85,6 +86,18 @@ export default function Home() {
                 Step-by-step guides, code examples, and practical tutorials to help you master new technologies.
               </p>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Newsletter Section */}
+      <section className="py-16 text-gray-900">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h2 className="text-3xl font-bold mb-4">
+            Subscribe to Our Newsletter
+          </h2>
+          <div className="w-full sm:w-3/4 md:w-2/3 lg:w-2/5 xl:w-2/5 mx-auto">
+            <NewsletterSignupForm source="homepage" />
           </div>
         </div>
       </section>

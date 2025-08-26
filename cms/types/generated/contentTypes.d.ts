@@ -533,6 +533,7 @@ export interface ApiNewsletterSignupNewsletterSignup
         'sticky_header',
         'footer',
         'popup',
+        'homepage',
         'landing_page',
         'api',
         'manual',
