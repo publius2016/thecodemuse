@@ -365,6 +365,226 @@ const emailService = {
       return { success: false, error: error.message };
     }
   },
+
+  // Newsletter email methods
+  async sendNewsletterVerificationEmail(signupData: any) {
+    const { email, firstName, lastName, verificationToken, source } = signupData;
+    
+    try {
+      console.log('Sending newsletter verification email...');
+      console.log('Verification email data:', { email, firstName, verificationToken, source });
+      
+      const transporter = createTransporter('verification');
+      console.log('Transporter created successfully');
+      
+      const fromEmail = process.env.FROM_EMAIL || 'newsletter@thecodemuse.com';
+      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+      const verificationUrl = `${frontendUrl}/verify-email?token=${verificationToken}`;
+      
+      console.log('From email:', fromEmail);
+      console.log('Verification URL:', verificationUrl);
+      
+      const displayName = firstName ? `${firstName} ${lastName || ''}`.trim() : 'there';
+      
+      const emailTemplate = {
+        from: `"The Code Muse Newsletter" <${fromEmail}>`,
+        to: email,
+        subject: 'Verify Your Newsletter Subscription - The Code Muse',
+        headers: {
+          'List-Unsubscribe': `<mailto:unsubscribe@thecodemuse.com?subject=unsubscribe>`,
+          'X-Mailer': 'The Code Muse Newsletter',
+          'X-Priority': '3',
+          'X-MSMail-Priority': 'Normal'
+        },
+        html: `
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Verify Your Newsletter Subscription</title>
+            <style>
+              body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+              .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+              .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+              .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }
+              .button { display: inline-block; background: #667eea; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; margin: 20px 0; }
+              .footer { text-align: center; margin-top: 30px; color: #666; font-size: 14px; }
+              .warning { background: #fff3cd; border: 1px solid #ffeaa7; padding: 15px; border-radius: 5px; margin: 20px 0; }
+            </style>
+          </head>
+          <body>
+            <div class="container">
+              <div class="header">
+                <h1>🎉 Welcome to The Code Muse Newsletter!</h1>
+                <p>One more step to complete your subscription</p>
+              </div>
+              
+              <div class="content">
+                <h2>Hi ${displayName},</h2>
+                
+                <p>Thank you for subscribing to The Code Muse newsletter! We're excited to share programming insights, tutorials, and tech tips with you.</p>
+                
+                <p><strong>To complete your subscription, please verify your email address:</strong></p>
+                
+                <div style="text-align: center;">
+                  <a href="${verificationUrl}" class="button">Verify Email Address</a>
+                </div>
+                
+                <p>Or copy and paste this link into your browser:</p>
+                <p style="word-break: break-all; color: #667eea;">${verificationUrl}</p>
+                
+                <div class="warning">
+                  <strong>⚠️ Important:</strong> This verification link will expire in 24 hours. If you don't verify your email within this time, you'll need to sign up again.
+                </div>
+                
+                <p>If you didn't sign up for our newsletter, you can safely ignore this email.</p>
+                
+                <p>Best regards,<br>
+                The Code Muse Team</p>
+              </div>
+              
+              <div class="footer">
+                <p>This email was sent to ${email} because you signed up for The Code Muse newsletter.</p>
+                <p>© ${new Date().getFullYear()} The Code Muse. All rights reserved.</p>
+                <p>
+                  <a href="${frontendUrl}/privacy" style="color: #667eea;">Privacy Policy</a> | 
+                  <a href="${frontendUrl}/terms" style="color: #667eea;">Terms of Service</a> | 
+                  <a href="mailto:unsubscribe@thecodemuse.com?subject=unsubscribe" style="color: #667eea;">Unsubscribe</a>
+                </p>
+              </div>
+            </div>
+          </body>
+          </html>
+        `,
+        text: `
+Welcome to The Code Muse Newsletter!
+
+Hi ${displayName},
+
+Thank you for subscribing to The Code Muse newsletter! We're excited to share programming insights, tutorials, and tech tips with you.
+
+To complete your subscription, please verify your email address by clicking this link:
+
+${verificationUrl}
+
+Or copy and paste the link into your browser.
+
+IMPORTANT: This verification link will expire in 24 hours. If you don't verify your email within this time, you'll need to sign up again.
+
+If you didn't sign up for our newsletter, you can safely ignore this email.
+
+Best regards,
+The Code Muse Team
+
+---
+This email was sent to ${email} because you signed up for The Code Muse newsletter.
+© ${new Date().getFullYear()} The Code Muse. All rights reserved.
+Privacy Policy: ${frontendUrl}/privacy
+Terms of Service: ${frontendUrl}/terms
+Unsubscribe: mailto:unsubscribe@thecodemuse.com?subject=unsubscribe
+        `
+      };
+      
+      console.log('Sending email...');
+      const info = await transporter.sendMail(emailTemplate);
+      console.log('Verification email sent successfully:', info.messageId);
+      
+      // For development, show the preview URL
+      if (getEnvironment() === 'development') {
+        console.log('📧 Newsletter Verification Email Preview URL:', nodemailer.getTestMessageUrl(info));
+      }
+      
+      return {
+        success: true,
+        messageId: info.messageId,
+        verificationUrl
+      };
+      
+    } catch (error) {
+      console.error('Failed to send verification email:', error);
+      throw new Error(`Failed to send verification email: ${error.message}`);
+    }
+  },
+
+  async sendNewsletterWelcomeEmail(signupData: any) {
+    const { email, firstName, lastName } = signupData;
+    
+    try {
+      console.log('Sending newsletter welcome email...');
+      
+      const transporter = createTransporter('welcome');
+      const fromEmail = process.env.FROM_EMAIL || 'newsletter@thecodemuse.com';
+      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+      
+      const displayName = firstName ? `${firstName} ${lastName || ''}`.trim() : 'there';
+      
+      const emailTemplate = {
+        from: `"The Code Muse Newsletter" <${fromEmail}>`,
+        to: email,
+        subject: 'Welcome to The Code Muse Newsletter! 🎉',
+        html: `
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Welcome to The Code Muse Newsletter</title>
+            <style>
+              body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+              .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+              .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px; }
+              .content { background: #f9f9f9; padding: 30px; border-radius: 10px; margin-top: 20px; }
+              .button { display: inline-block; background: #667eea; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; margin: 20px 0; }
+            </style>
+          </head>
+          <body>
+            <div class="container">
+              <div class="header">
+                <h1>🎉 Welcome to The Code Muse Newsletter!</h1>
+                <p>Your subscription is now active</p>
+              </div>
+              
+              <div class="content">
+                <h2>Hi ${displayName},</h2>
+                
+                <p>Great news! Your email has been verified and you're now subscribed to The Code Muse newsletter.</p>
+                
+                <p>You'll receive our latest programming insights, tutorials, and tech tips delivered straight to your inbox.</p>
+                
+                <div style="text-align: center;">
+                  <a href="${frontendUrl}/blog" class="button">Explore Our Blog</a>
+                </div>
+                
+                <p>We're excited to have you as part of our community!</p>
+                
+                <p>Best regards,<br>
+                The Code Muse Team</p>
+              </div>
+            </div>
+          </body>
+          </html>
+        `
+      };
+      
+      const info = await transporter.sendMail(emailTemplate);
+      console.log('Welcome email sent successfully:', info.messageId);
+      
+      // For development, show the preview URL
+      if (getEnvironment() === 'development') {
+        console.log('📧 Newsletter Welcome Email Preview URL:', nodemailer.getTestMessageUrl(info));
+      }
+      
+      return {
+        success: true,
+        messageId: info.messageId
+      };
+      
+    } catch (error) {
+      console.error('Failed to send welcome email:', error);
+      throw new Error(`Failed to send welcome email: ${error.message}`);
+    }
+  }
 };
 
 export default emailService; 

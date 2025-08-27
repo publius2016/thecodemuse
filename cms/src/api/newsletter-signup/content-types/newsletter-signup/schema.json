@@ -28,7 +28,7 @@
       "maxLength": 100,
       "description": "Subscriber's last name (optional)"
     },
-    "status": {
+    "subscriptionStatus": {
       "type": "enumeration",
       "enum": [
         "pending",

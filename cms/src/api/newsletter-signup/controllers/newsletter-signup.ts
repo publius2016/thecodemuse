@@ -1,5 +1,6 @@
 import { factories } from '@strapi/strapi';
 import crypto from 'crypto';
+import emailService from '../../contact-submission/services/email-service';
 
 // Helper function to generate verification token
 function generateVerificationToken() {
@@ -29,7 +30,7 @@ export default factories.createCoreController('api::newsletter-signup.newsletter
       // Prepare signup data
       const signupData = {
         ...body,
-        status: 'pending',
+        subscriptionStatus: 'pending',
         subscriptionDate: new Date(),
         verified: false,
         verificationToken: generateVerificationToken(),
@@ -56,15 +57,52 @@ export default factories.createCoreController('api::newsletter-signup.newsletter
         location: body.location || {}
       };
 
+      // Log what we're sending to Strapi
+      strapi.log.info('Signup data being sent to Strapi - Email:', signupData.email);
+      strapi.log.info('Signup data being sent to Strapi - SubscriptionStatus:', signupData.subscriptionStatus);
+      strapi.log.info('Signup data being sent to Strapi - Verified:', signupData.verified);
+      strapi.log.info('Signup data being sent to Strapi - Source:', signupData.source);
+
       // Create the signup
       const signup = await strapi.entityService.create('api::newsletter-signup.newsletter-signup', {
         data: signupData
       });
 
-      // Send verification email if double opt-in is enabled
-      if (signupData.consent.doubleOptIn) {
-        // TODO: Send verification email
-        strapi.log.info('Verification email should be sent to:', signupData.email);
+      // Log what Strapi actually stored
+      strapi.log.info('Record created by Strapi - ID:', signup.id);
+      strapi.log.info('Record created by Strapi - Email:', signup.email);
+      strapi.log.info('Record created by Strapi - SubscriptionStatus:', signup.subscriptionStatus);
+      strapi.log.info('Record created by Strapi - Verified:', signup.verified);
+      strapi.log.info('Record created by Strapi - Source:', signup.source);
+
+      // Log the verification token for development only
+      if (process.env.NODE_ENV === 'development') {
+        strapi.log.info('Newsletter signup created successfully:', {
+          email: signupData.email,
+          id: signup.id,
+          verificationToken: signupData.verificationToken,
+          verificationExpires: signupData.verificationExpires
+        });
+      } else {
+        // Production logging - no sensitive data
+        strapi.log.info('Newsletter signup created successfully:', {
+          email: signupData.email,
+          id: signup.id,
+          subscriptionStatus: signupData.subscriptionStatus
+        });
+      }
+
+      // Send verification email
+      try {
+        const emailResult = await emailService.sendNewsletterVerificationEmail(signupData);
+        strapi.log.info('Verification email sent successfully:', {
+          email: signupData.email,
+          messageId: emailResult.messageId,
+          verificationUrl: emailResult.verificationUrl
+        });
+      } catch (emailError) {
+        strapi.log.error('Failed to send verification email:', emailError);
+        // Don't fail the signup if email fails - user can request resend later
       }
 
       // Return success response
@@ -73,8 +111,9 @@ export default factories.createCoreController('api::newsletter-signup.newsletter
         data: {
           id: signup.id,
           email: signup.email,
-          status: signup.status,
-          verified: signup.verified
+          subscriptionStatus: signup.subscriptionStatus,
+          verified: signup.verified,
+          verificationRequired: true
         }
       });
 
@@ -87,11 +126,11 @@ export default factories.createCoreController('api::newsletter-signup.newsletter
   // Get all newsletter signups (admin only)
   async find(ctx) {
     try {
-      const { page = 1, pageSize = 25, status, source, search } = ctx.query;
+      const { page = 1, pageSize = 25, subscriptionStatus, source, search } = ctx.query;
 
       const filters: any = {};
       
-      if (status) filters.status = status;
+      if (subscriptionStatus) filters.subscriptionStatus = subscriptionStatus;
       if (source) filters.source = source;
       if (search) {
         filters.$or = [
@@ -188,12 +227,21 @@ export default factories.createCoreController('api::newsletter-signup.newsletter
       // Update signup status
       const updatedSignup = await strapi.entityService.update('api::newsletter-signup.newsletter-signup', signupToVerify.id, {
         data: {
-          status: 'active',
+          subscriptionStatus: 'active',
           verified: true,
           verificationToken: null,
           verificationExpires: null
         }
       });
+
+      // Send welcome email
+      try {
+        await emailService.sendNewsletterWelcomeEmail(updatedSignup);
+        strapi.log.info('Welcome email sent successfully to:', updatedSignup.email);
+      } catch (emailError) {
+        strapi.log.error('Failed to send welcome email:', emailError);
+        // Don't fail verification if welcome email fails
+      }
 
       ctx.send({
         message: 'Email verified successfully! You are now subscribed to our newsletter.',
@@ -228,7 +276,7 @@ export default factories.createCoreController('api::newsletter-signup.newsletter
       // Update signup status
       const updatedSignup = await strapi.entityService.update('api::newsletter-signup.newsletter-signup', signupToUpdate.id, {
         data: {
-          status: 'unsubscribed'
+          subscriptionStatus: 'unsubscribed'
         }
       });
 
@@ -248,13 +296,13 @@ export default factories.createCoreController('api::newsletter-signup.newsletter
     try {
       const totalSubscribers = await strapi.entityService.count('api::newsletter-signup.newsletter-signup');
       const activeSubscribers = await strapi.entityService.count('api::newsletter-signup.newsletter-signup', {
-        filters: { status: 'active' }
+        filters: { subscriptionStatus: 'active' }
       });
       const pendingSubscribers = await strapi.entityService.count('api::newsletter-signup.newsletter-signup', {
-        filters: { status: 'pending' }
+        filters: { subscriptionStatus: 'pending' }
       });
       const unsubscribedSubscribers = await strapi.entityService.count('api::newsletter-signup.newsletter-signup', {
-        filters: { status: 'unsubscribed' }
+        filters: { subscriptionStatus: 'unsubscribed' }
       });
 
       // Get signups by source

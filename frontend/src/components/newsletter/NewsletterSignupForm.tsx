@@ -105,10 +105,16 @@ export default function NewsletterSignupForm({
     return (
       <div className={`bg-green-50 border border-green-200 rounded-lg p-4 text-center ${className}`}>
         <div className="text-green-600 font-medium">
-          🎉 Welcome to The Code Muse Newsletter!
+          🎉 Newsletter Signup Successful!
         </div>
-        <div className="text-green-500 text-sm mt-1">
-          Please check your email to verify your subscription.
+        <div className="text-green-500 text-sm mt-2">
+          We've sent a verification email to <strong>{formData.email}</strong>
+        </div>
+        <div className="text-green-500 text-xs mt-2">
+          Please check your inbox and click the verification link to complete your subscription.
+        </div>
+        <div className="text-gray-500 text-xs mt-3">
+          Can't find the email? Check your spam folder.
         </div>
       </div>
     );

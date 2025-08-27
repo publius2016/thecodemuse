@@ -542,12 +542,12 @@ export interface ApiNewsletterSignupNewsletterSignup
     > &
       Schema.Attribute.Required;
     sourceUrl: Schema.Attribute.Text;
-    status: Schema.Attribute.Enumeration<
+    subscriptionDate: Schema.Attribute.DateTime & Schema.Attribute.Required;
+    subscriptionStatus: Schema.Attribute.Enumeration<
       ['pending', 'active', 'unsubscribed', 'bounced', 'complained', 'deleted']
     > &
       Schema.Attribute.Required &
       Schema.Attribute.DefaultTo<'pending'>;
-    subscriptionDate: Schema.Attribute.DateTime & Schema.Attribute.Required;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
