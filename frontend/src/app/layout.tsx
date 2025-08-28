@@ -5,6 +5,7 @@ import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { ApolloWrapper } from "@/components/providers/apollo-provider";
 import NewsletterFAB from "@/components/newsletter/NewsletterFAB";
+import { NewsletterModalProvider } from "@/components/newsletter/NewsletterModalContext";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -55,14 +56,16 @@ export default function RootLayout({
     <html lang="en" className={inter.variable}>
       <body className="min-h-screen bg-gray-50 font-sans antialiased">
         <ApolloWrapper>
-          <div className="flex flex-col min-h-screen">
-            <Header />
-            <main className="flex-1">
-              {children}
-            </main>
-            <Footer />
-            <NewsletterFAB />
-          </div>
+          <NewsletterModalProvider>
+            <div className="flex flex-col min-h-screen">
+              <Header />
+              <main className="flex-1">
+                {children}
+              </main>
+              <Footer />
+              <NewsletterFAB />
+            </div>
+          </NewsletterModalProvider>
         </ApolloWrapper>
       </body>
     </html>

@@ -18,7 +18,7 @@ export default {
       }
     },
     {
-      method: 'GET',
+      method: 'POST',
       path: '/newsletter-signups/verify/:token',
       handler: 'newsletter-signup.verify',
       config: {
@@ -29,7 +29,7 @@ export default {
         tag: {
           plugin: 'newsletter-signup',
           name: 'Newsletter verification',
-          actionType: 'read'
+          actionType: 'update'
         }
       }
     },

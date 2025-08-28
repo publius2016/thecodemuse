@@ -1,13 +1,18 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import NewsletterSignupForm from './NewsletterSignupForm';
+import { useNewsletterModal } from './NewsletterModalContext';
 
 export default function NewsletterFAB() {
-  const [isOpen, setIsOpen] = useState(false);
+  const { isOpen, openModal, closeModal } = useNewsletterModal();
 
   const toggleModal = () => {
-    setIsOpen(!isOpen);
+    if (isOpen) {
+      closeModal();
+    } else {
+      openModal();
+    }
   };
 
   return (
@@ -35,7 +40,7 @@ export default function NewsletterFAB() {
                  {/* Backdrop */}
                  <div 
                    className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-                   onClick={toggleModal}
+                   onClick={closeModal}
                  />
           
           {/* Modal */}
@@ -46,7 +51,7 @@ export default function NewsletterFAB() {
                 📧 Newsletter Signup
               </h3>
               <button
-                onClick={toggleModal}
+                onClick={closeModal}
                 className="text-gray-400 hover:text-gray-600 transition-colors"
                 aria-label="Close modal"
               >

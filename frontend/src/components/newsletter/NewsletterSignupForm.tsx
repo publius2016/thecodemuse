@@ -88,7 +88,7 @@ export default function NewsletterSignupForm({
       } else {
         setFormState(prev => ({ 
           ...prev, 
-          error: data.message || 'Failed to subscribe. Please try again.',
+          error: data.error.message || 'Failed to subscribe. Please try again.',
           isSubmitting: false 
         }));
       }
