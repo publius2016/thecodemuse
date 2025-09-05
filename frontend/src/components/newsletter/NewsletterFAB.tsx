@@ -69,14 +69,6 @@ export default function NewsletterFAB() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                   </svg>
                 </div>
-                
-                <h4 className="text-lg font-semibold text-gray-900 mb-2">
-                  Stay Updated with The Code Muse
-                </h4>
-                
-                <p className="text-gray-600">
-                  Get the latest programming insights, tutorials, and tech tips delivered straight to your inbox.
-                </p>
               </div>
 
               <NewsletterSignupForm 
