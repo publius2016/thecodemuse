@@ -1,6 +1,6 @@
 import { factories } from '@strapi/strapi';
 import crypto from 'crypto';
-import emailService from '../../contact-submission/services/email-service';
+import emailServiceClient from '../../../services/email-service-client';
 
 // Helper function to generate verification token
 function generateVerificationToken() {
@@ -36,7 +36,7 @@ export default factories.createCoreController('api::newsletter-signup.newsletter
         verificationToken: generateVerificationToken(),
         verificationExpires: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours
         source: body.source || 'api',
-        sourceUrl: body.sourceUrl || ctx.request.url,
+        sourceUrl: body.sourceUrl || 'https://thecodemuse.com',
         ipAddress: ctx.request.ip,
         userAgent: ctx.request.headers['user-agent'],
         consent: {
@@ -94,11 +94,21 @@ export default factories.createCoreController('api::newsletter-signup.newsletter
 
       // Send verification email
       try {
-        const emailResult = await emailService.sendNewsletterVerificationEmail(signupData);
+        // Prepare clean data for email service (only required fields)
+        const emailData = {
+          email: signupData.email,
+          firstName: signupData.firstName,
+          lastName: signupData.lastName,
+          verificationToken: signupData.verificationToken,
+          source: signupData.source,
+          sourceUrl: signupData.sourceUrl
+        };
+        
+        const emailResult = await emailServiceClient.sendNewsletterVerificationEmail(emailData);
         strapi.log.info('Verification email sent successfully:', {
           email: signupData.email,
           messageId: emailResult.messageId,
-          verificationUrl: emailResult.verificationUrl
+          success: emailResult.success
         });
       } catch (emailError) {
         strapi.log.error('Failed to send verification email:', emailError);
@@ -236,10 +246,27 @@ export default factories.createCoreController('api::newsletter-signup.newsletter
 
       // Send welcome email
       try {
-        await emailService.sendNewsletterWelcomeEmail(updatedSignup);
-        strapi.log.info('Welcome email sent successfully to:', updatedSignup.email);
+        // Ensure we have the required fields for the email service
+        const welcomeEmailData = {
+          email: updatedSignup.email,
+          firstName: updatedSignup.firstName,
+          lastName: updatedSignup.lastName,
+          verificationToken: '', // Not needed for welcome email
+          source: updatedSignup.source || 'verification',
+          sourceUrl: updatedSignup.sourceUrl || ''
+        };
+        
+        const emailResult = await emailServiceClient.sendNewsletterWelcomeEmail(welcomeEmailData);
+        strapi.log.info('Welcome email sent successfully:', {
+          email: updatedSignup.email,
+          success: emailResult.success,
+          messageId: emailResult.messageId
+        });
       } catch (emailError) {
-        strapi.log.error('Failed to send welcome email:', emailError);
+        strapi.log.error('Failed to send welcome email:', {
+          email: updatedSignup.email,
+          error: emailError.message
+        });
         // Don't fail verification if welcome email fails
       }
 

@@ -1,5 +1,5 @@
 import { factories } from '@strapi/strapi';
-import emailService from '../services/email-service';
+import emailServiceClient from '../../../services/email-service-client';
 
 export default factories.createCoreController('api::contact-submission.contact-submission', ({ strapi }) => ({
   async create(ctx) {
@@ -25,9 +25,17 @@ export default factories.createCoreController('api::contact-submission.contact-s
 
       // Send welcome email
       try {
-        await emailService.sendWelcomeEmail(data);
+        const emailResult = await emailServiceClient.sendWelcomeEmail(data);
+        strapi.log.info('Contact welcome email sent successfully', {
+          email: data.email,
+          success: emailResult.success,
+          messageId: emailResult.messageId
+        });
       } catch (error) {
-        console.error('Failed to send welcome email:', error);
+        strapi.log.error('Failed to send welcome email', {
+          email: data.email,
+          error: error.message
+        });
         // Don't fail the contact submission if email fails
       }
 

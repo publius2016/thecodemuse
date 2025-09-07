@@ -71,7 +71,7 @@ export default function NewsletterSignupForm({
           firstName: formData.firstName,
           lastName: formData.lastName,
           source,
-          sourceUrl: window.location.href
+          sourceUrl: window.location.origin
         })
       });
 
