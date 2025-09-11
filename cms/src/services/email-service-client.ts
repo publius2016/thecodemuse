@@ -1,5 +1,6 @@
 import { Logger } from '@strapi/logger';
 import fetch from 'node-fetch';
+import { getEnvironmentConfig } from '../../config/environment';
 
 interface EmailServiceConfig {
   url: string;
@@ -35,10 +36,12 @@ class EmailServiceClient {
   private config: EmailServiceConfig;
 
   constructor() {
+    const envConfig = getEnvironmentConfig();
+    
     this.config = {
-      url: process.env.EMAIL_SERVICE_URL || 'http://localhost:3030',
-      apiKey: process.env.EMAIL_SERVICE_API_KEY || '',
-      timeout: parseInt(process.env.EMAIL_SERVICE_TIMEOUT || '10000'),
+      url: envConfig.email.serviceUrl,
+      apiKey: envConfig.email.apiKey,
+      timeout: envConfig.email.timeout,
       retryAttempts: parseInt(process.env.EMAIL_SERVICE_RETRY_ATTEMPTS || '3'),
       retryDelay: parseInt(process.env.EMAIL_SERVICE_RETRY_DELAY || '1000')
     };
