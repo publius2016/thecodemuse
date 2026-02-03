@@ -1,43 +1,71 @@
-import path from 'path';
-import { getEnvironmentConfig } from './environment';
-
 export default ({ env }) => {
-  const client = env('DATABASE_CLIENT', 'postgres');
-  const envConfig = getEnvironmentConfig();
+  const nodeEnv = process.env.NODE_ENV || 'development';
+  
+  console.log('🔧 DATABASE CONFIG LOADING - Environment:', nodeEnv.toUpperCase());
+  
+  // Helper to get SSL config (Supabase requires rejectUnauthorized: false)
+  const getSSLConfig = (envVar: string, defaultValue: string) => {
+    const sslEnabled = env(envVar, defaultValue) === 'true';
+    return sslEnabled ? { rejectUnauthorized: false } : false;
+  };
+  
+  // Environment-specific database configurations
+  const databaseConfigs = {
+    development: {
+      host: env('DEV_DATABASE_HOST', 'localhost'),
+      port: env.int('DEV_DATABASE_PORT', 5432),
+      database: env('DEV_DATABASE_NAME', 'blog_cms'),
+      user: env('DEV_DATABASE_USERNAME', 'postgres'),
+      password: env('DEV_DATABASE_PASSWORD', ''),
+      ssl: getSSLConfig('DEV_DATABASE_SSL', 'false'),
+    },
+    
+    staging: {
+      host: env('STAGING_DATABASE_HOST'),
+      port: env.int('STAGING_DATABASE_PORT', 5432),
+      database: env('STAGING_DATABASE_NAME'),
+      user: env('STAGING_DATABASE_USERNAME'),
+      password: env('STAGING_DATABASE_PASSWORD'),
+      ssl: getSSLConfig('STAGING_DATABASE_SSL', 'true'),
+    },
+    
+    production: {
+      host: env('PROD_DATABASE_HOST'),
+      port: env.int('PROD_DATABASE_PORT', 5432),
+      database: env('PROD_DATABASE_NAME'),
+      user: env('PROD_DATABASE_USERNAME'),
+      password: env('PROD_DATABASE_PASSWORD'),
+      ssl: getSSLConfig('PROD_DATABASE_SSL', 'true'),
+    }
+  };
 
-  const connections = {
-    postgres: {
+  // Get configuration for current environment
+  const dbConfig = databaseConfigs[nodeEnv as keyof typeof databaseConfigs] || databaseConfigs.development;
+  
+  const config = {
+    connection: {
+      client: 'postgres',
       connection: {
-        connectionString: env('DATABASE_URL'),
-        host: envConfig.database.host,
-        port: envConfig.database.port,
-        database: envConfig.database.database,
-        user: envConfig.database.username,
-        password: envConfig.database.password,
-        ssl: envConfig.database.ssl ? {
-          rejectUnauthorized: env.bool('DATABASE_SSL_REJECT_UNAUTHORIZED', false),
-        } : false,
+        ...dbConfig,
         schema: env('DATABASE_SCHEMA', 'public'),
       },
-      pool: { 
-        min: env.int('DATABASE_POOL_MIN', 2), 
-        max: env.int('DATABASE_POOL_MAX', 10),
-        acquireTimeoutMillis: env.int('DATABASE_CONNECTION_TIMEOUT', 60000),
-        createTimeoutMillis: 30000,
-        destroyTimeoutMillis: 5000,
-        idleTimeoutMillis: 30000,
-        reapIntervalMillis: 1000,
-        createRetryIntervalMillis: 200,
-      },
     },
   };
-
-  return {
+  
+  // Log current environment info (only in development)
+  if (nodeEnv === 'development') {
+    console.log(`🗄️  Database: ${dbConfig.host}:${dbConfig.port}/${dbConfig.database}`);
+  }
+  
+  console.log('🔧 Final database config:', JSON.stringify({
     connection: {
-      client,
-      ...connections[client],
-      acquireConnectionTimeout: env.int('DATABASE_CONNECTION_TIMEOUT', 60000),
-    },
-  };
+      client: config.connection.client,
+      connection: {
+        ...config.connection.connection,
+        password: '***REDACTED***'
+      }
+    }
+  }, null, 2));
+  
+  return config;
 };
-

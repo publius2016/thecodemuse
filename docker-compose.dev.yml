@@ -1,0 +1,82 @@
+version: '3.8'
+
+services:
+  # CMS Service
+  cms:
+    build:
+      context: ./cms
+      dockerfile: Dockerfile
+    ports:
+      - "1337:1337"
+    env_file:
+      - ./cms/.env
+    environment:
+      - NODE_ENV=development
+      - HOST=0.0.0.0
+      - PORT=1337
+      - DEV_DATABASE_HOST=host.docker.internal  # Connect to host machine PostgreSQL
+      - DEV_EMAIL_SERVICE_URL=http://email-service:3030  # Override with Docker service name
+    command: ["npm", "run", "develop"]
+    volumes:
+      - cms_uploads:/app/public/uploads
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"require('http').get('http://localhost:1337/_health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })\""]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Frontend Service
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        - NEXT_PUBLIC_STRAPI_URL=http://localhost:1337
+        - NEXT_PUBLIC_STRAPI_API_URL=http://localhost:1337/api
+        - NEXT_PUBLIC_STRAPI_GRAPHQL_URL=http://localhost:1337/graphql
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - NEXT_PUBLIC_STRAPI_URL=http://cms:1337
+      - NEXT_PUBLIC_STRAPI_API_URL=http://cms:1337/api
+      - NEXT_PUBLIC_STRAPI_GRAPHQL_URL=http://cms:1337/graphql
+    depends_on:
+      cms:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"require('http').get('http://localhost:3000/api/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })\""]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Email Service (from external repo)
+  email-service:
+    build:
+      context: ../muse-email-service
+      dockerfile: Dockerfile
+    ports:
+      - "3030:3030"
+    environment:
+      - NODE_ENV=development
+      - PORT=3030
+      - EMAIL_PROVIDER=ethereal
+      - USE_REAL_EMAIL_IN_DEV=false
+      - FROM_EMAIL=noreply@thecodemuse.com
+      - FROM_NAME=The Code Muse
+      - ADMIN_EMAIL=admin@thecodemuse.com
+      - API_KEY=dev-api-key
+      - FRONTEND_URL=http://localhost:3000
+      - ADMIN_URL=http://localhost:1337
+      - LOG_LEVEL=debug
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"require('http').get('http://localhost:3030/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })\""]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+volumes:
+  cms_uploads:

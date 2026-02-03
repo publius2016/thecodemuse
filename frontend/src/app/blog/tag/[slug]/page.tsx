@@ -1,7 +1,4 @@
-'use client';
-
-import { useQuery } from '@apollo/client';
-import { GET_POSTS_BY_TAG, GET_TAG_BY_SLUG } from '@/lib/queries';
+import { getTagBySlug, getPostsByTag } from '@/lib/data';
 import { formatDate, getOptimizedImageUrl } from '@/lib/utils';
 import { Calendar, Clock, User, ArrowLeft, Tag } from 'lucide-react';
 import Link from 'next/link';
@@ -16,47 +13,38 @@ interface TagPageProps {
 export default async function TagPage({ params }: TagPageProps) {
   const { slug } = await params;
   
-  return <TagPageClient slug={slug} />;
-}
+  let tag = null;
+  let posts = [];
+  let error = null;
 
-function TagPageClient({ slug }: { slug: string }) {
-  const { loading: tagLoading, data: tagData } = useQuery(GET_TAG_BY_SLUG, {
-    variables: { slug },
-  });
+  try {
+    // Fetch tag and posts in parallel
+    const [tagData, postsData] = await Promise.all([
+      getTagBySlug(slug),
+      getPostsByTag(slug, { limit: 20, start: 0 })
+    ]);
 
-  const { loading: postsLoading, error: postsError, data: postsData } = useQuery(GET_POSTS_BY_TAG, {
-    variables: { tagSlug: slug, limit: 20, start: 0 },
-  });
+    tag = tagData;
+    posts = postsData.data || [];
+  } catch (err) {
+    console.error('Error fetching tag data:', err);
+    error = err instanceof Error ? err : new Error('Failed to fetch tag data');
+  }
 
-  if (tagLoading || postsLoading) {
+  if (error) {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading tag...</p>
+          <h2 className="text-2xl font-bold text-red-600 mb-4">Error Loading Tag</h2>
+          <p className="text-gray-600 mb-4">{error.message}</p>
         </div>
       </div>
     );
   }
 
-  if (postsError) {
-    return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-red-600 mb-4">Error Loading Posts</h2>
-          <p className="text-gray-600 mb-4">{postsError.message}</p>
-        </div>
-      </div>
-    );
-  }
-
-  const tags = tagData?.tags || [];
-  if (tags.length === 0) {
+  if (!tag) {
     notFound();
   }
-
-  const tag = tags[0];
-  const posts = postsData?.posts || [];
 
   return (
     <div className="bg-white">

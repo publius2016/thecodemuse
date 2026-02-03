@@ -1,25 +1,18 @@
-'use client';
-
-import { useQuery } from '@apollo/client';
-import { GET_POSTS } from '@/lib/queries';
-import { formatDate, getOptimizedImageUrl, getExcerpt } from '@/lib/utils';
+import { getPosts } from '@/lib/data';
+import { formatDate, getOptimizedImageUrl } from '@/lib/utils';
 import Link from 'next/link';
 import { Calendar, Clock, User } from 'lucide-react';
 
-export default function BlogPage() {
-  const { loading, error, data } = useQuery(GET_POSTS, {
-    variables: { limit: 10, start: 0 },
-  });
+export default async function BlogPage() {
+  let posts = [];
+  let error = null;
 
-  if (loading) {
-    return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading posts...</p>
-        </div>
-      </div>
-    );
+  try {
+    const response = await getPosts({ limit: 10, start: 0 });
+    posts = response.data || [];
+  } catch (err) {
+    console.error('Error fetching posts:', err);
+    error = err instanceof Error ? err : new Error('Failed to fetch posts');
   }
 
   if (error) {
@@ -35,8 +28,6 @@ export default function BlogPage() {
       </div>
     );
   }
-
-  const posts = data?.posts || [];
 
   return (
     <div className="bg-white">

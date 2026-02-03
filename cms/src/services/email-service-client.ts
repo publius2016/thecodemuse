@@ -1,6 +1,6 @@
 import { Logger } from '@strapi/logger';
 import fetch from 'node-fetch';
-import { getEnvironmentConfig } from '../../config/environment';
+import { getEnvironmentConfig } from '../utils/environment';
 
 interface EmailServiceConfig {
   url: string;

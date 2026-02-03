@@ -1,7 +1,4 @@
-'use client';
-
-import { useQuery } from '@apollo/client';
-import { GET_POST_BY_SLUG } from '@/lib/queries';
+import { getPostBySlug } from '@/lib/data';
 import { formatDate, getOptimizedImageUrl } from '@/lib/utils';
 import { Calendar, Clock, User, ArrowLeft, Share2, Tag, Folder } from 'lucide-react';
 import Link from 'next/link';
@@ -20,24 +17,14 @@ interface PostPageProps {
 export default async function PostPage({ params }: PostPageProps) {
   const { slug } = await params;
   
-  return <PostPageClient slug={slug} />;
-}
+  let post = null;
+  let error = null;
 
-function PostPageClient({ slug }: { slug: string }) {
-  const { loading, error, data } = useQuery(GET_POST_BY_SLUG, {
-    variables: { slug },
-    fetchPolicy: 'network-only', // Force fresh data until cache is cleared
-  });
-
-  if (loading) {
-    return (
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading post...</p>
-        </div>
-      </div>
-    );
+  try {
+    post = await getPostBySlug(slug);
+  } catch (err) {
+    console.error('Error fetching post:', err);
+    error = err instanceof Error ? err : new Error('Failed to fetch post');
   }
 
   if (error) {
@@ -52,13 +39,10 @@ function PostPageClient({ slug }: { slug: string }) {
     );
   }
 
-  const posts = data?.posts || [];
-  
-  if (posts.length === 0) {
+  if (!post) {
     notFound();
   }
 
-  const post = posts[0];
   const featuredImage = post.featuredImage;
   const author = post.author;
 

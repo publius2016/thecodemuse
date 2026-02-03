@@ -1,0 +1,78 @@
+version: '3.8'
+
+services:
+  # CMS Service
+  cms:
+    build:
+      context: ./cms
+      dockerfile: Dockerfile
+    ports:
+      - "1338:1337"  # Different port for staging
+    env_file:
+      - ./cms/.env
+    environment:
+      - NODE_ENV=staging
+      - HOST=0.0.0.0
+      - PORT=1337
+      - STAGING_EMAIL_SERVICE_URL=http://email-service:3030
+    command: ["npm", "run", "staging"]
+    volumes:
+      - cms_staging_uploads:/app/public/uploads
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"require('http').get('http://localhost:1337/_health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })\""]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Frontend Service
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        - NEXT_PUBLIC_STRAPI_URL=http://localhost:1338
+        - NEXT_PUBLIC_STRAPI_API_URL=http://localhost:1338/api
+        - NEXT_PUBLIC_STRAPI_GRAPHQL_URL=http://localhost:1338/graphql
+    ports:
+      - "3001:3000"  # Different port for staging
+    environment:
+      - NODE_ENV=staging
+    depends_on:
+      cms:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"require('http').get('http://localhost:3000/api/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })\""]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Email Service (from external repo)
+  email-service:
+    build:
+      context: ../muse-email-service
+      dockerfile: Dockerfile
+    ports:
+      - "3031:3030"  # Different port for staging
+    environment:
+      - NODE_ENV=staging
+      - PORT=3030
+      - EMAIL_PROVIDER=ethereal
+      - USE_REAL_EMAIL_IN_DEV=true
+      - FROM_EMAIL=noreply@staging.thecodemuse.com
+      - FROM_NAME=The Code Muse (Staging)
+      - ADMIN_EMAIL=admin@staging.thecodemuse.com
+      - API_KEY=staging-api-key
+      - FRONTEND_URL=http://localhost:3001
+      - ADMIN_URL=http://localhost:1338
+      - LOG_LEVEL=info
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"require('http').get('http://localhost:3030/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })\""]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+volumes:
+  cms_staging_uploads:
