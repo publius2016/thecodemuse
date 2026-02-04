@@ -72,9 +72,16 @@ export interface PostResponse {
 
 /**
  * Get the Strapi base URL from environment variables
+ * Uses STRAPI_SERVER_URL for server-side requests (Docker internal network)
+ * Falls back to NEXT_PUBLIC_STRAPI_URL for client-side or if server URL not set
  */
 function getStrapiUrl(): string {
-  const url = process.env.NEXT_PUBLIC_STRAPI_URL || 'http://localhost:1337';
+  // For server-side rendering inside Docker, use the internal network URL
+  const serverUrl = process.env.STRAPI_SERVER_URL;
+  const publicUrl = process.env.NEXT_PUBLIC_STRAPI_URL || 'http://localhost:1337';
+  
+  // Use server URL if available and we're on the server
+  const url = typeof window === 'undefined' && serverUrl ? serverUrl : publicUrl;
   return url.replace(/\/$/, ''); // Remove trailing slash
 }
 

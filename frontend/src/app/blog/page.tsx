@@ -3,6 +3,9 @@ import { formatDate, getOptimizedImageUrl } from '@/lib/utils';
 import Link from 'next/link';
 import { Calendar, Clock, User } from 'lucide-react';
 
+// Force dynamic rendering to fetch fresh data from CMS
+export const dynamic = 'force-dynamic';
+
 export default async function BlogPage() {
   let posts = [];
   let error = null;

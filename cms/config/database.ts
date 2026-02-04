@@ -1,7 +1,8 @@
 export default ({ env }) => {
   const nodeEnv = process.env.NODE_ENV || 'development';
+  const appEnv = env('APP_ENV', nodeEnv);
   
-  console.log('🔧 DATABASE CONFIG LOADING - Environment:', nodeEnv.toUpperCase());
+  console.log('🔧 DATABASE CONFIG LOADING - Environment:', appEnv.toUpperCase());
   
   // Helper to get SSL config (Supabase requires rejectUnauthorized: false)
   const getSSLConfig = (envVar: string, defaultValue: string) => {
@@ -40,7 +41,7 @@ export default ({ env }) => {
   };
 
   // Get configuration for current environment
-  const dbConfig = databaseConfigs[nodeEnv as keyof typeof databaseConfigs] || databaseConfigs.development;
+  const dbConfig = databaseConfigs[appEnv as keyof typeof databaseConfigs] || databaseConfigs.development;
   
   const config = {
     connection: {
@@ -53,7 +54,7 @@ export default ({ env }) => {
   };
   
   // Log current environment info (only in development)
-  if (nodeEnv === 'development') {
+  if (appEnv === 'development') {
     console.log(`🗄️  Database: ${dbConfig.host}:${dbConfig.port}/${dbConfig.database}`);
   }
   

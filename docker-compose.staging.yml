@@ -11,15 +11,22 @@ services:
     env_file:
       - ./cms/.env
     environment:
-      - NODE_ENV=staging
+      - NODE_ENV=development
+      - APP_ENV=development
       - HOST=0.0.0.0
       - PORT=1337
-      - STAGING_EMAIL_SERVICE_URL=http://email-service:3030
-    command: ["npm", "run", "staging"]
+      - DEV_DATABASE_HOST=host.docker.internal
+      - DEV_DATABASE_PORT=5432
+      - DEV_DATABASE_NAME=blog_cms
+      - DEV_DATABASE_USERNAME=${DEV_DATABASE_USERNAME}
+      - DEV_DATABASE_PASSWORD=${DEV_DATABASE_PASSWORD}
+      - DEV_DATABASE_SSL=false
+      - DEV_EMAIL_SERVICE_URL=http://email-service:3030
+    command: ["npm", "start"]
     volumes:
       - cms_staging_uploads:/app/public/uploads
     healthcheck:
-      test: ["CMD-SHELL", "node -e \"require('http').get('http://localhost:1337/_health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })\""]
+      test: ["CMD-SHELL", "node -e \"require('http').get('http://localhost:1337/_health', (res) => { process.exit(res.statusCode === 200 || res.statusCode === 204 ? 0 : 1) })\""]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -38,6 +45,7 @@ services:
       - "3001:3000"  # Different port for staging
     environment:
       - NODE_ENV=staging
+      - STRAPI_SERVER_URL=http://cms:1337
     depends_on:
       cms:
         condition: service_healthy

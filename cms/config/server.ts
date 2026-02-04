@@ -1,7 +1,8 @@
 export default ({ env }) => {
   const nodeEnv = process.env.NODE_ENV || 'development';
+  const appEnv = env('APP_ENV', nodeEnv);
   
-  console.log('🔧 SERVER CONFIG LOADING - Environment:', nodeEnv.toUpperCase());
+  console.log('🔧 SERVER CONFIG LOADING - Environment:', appEnv.toUpperCase());
   
   // Environment-specific server configurations
   const serverConfigs = {
@@ -22,7 +23,7 @@ export default ({ env }) => {
   };
 
   // Get configuration for current environment
-  const serverConfig = serverConfigs[nodeEnv as keyof typeof serverConfigs] || serverConfigs.development;
+  const serverConfig = serverConfigs[appEnv as keyof typeof serverConfigs] || serverConfigs.development;
   
   // Get app keys from environment or generate fallback
   const appKeys = env.array('APP_KEYS');
@@ -31,7 +32,7 @@ export default ({ env }) => {
     console.warn('⚠️  APP_KEYS not found in environment variables');
     console.warn('💡 Run: npm run env:generate to create .env file with secure keys');
     
-    if (nodeEnv === 'production') {
+    if (appEnv === 'production') {
       throw new Error('APP_KEYS are required in production environment');
     }
     
@@ -47,7 +48,7 @@ export default ({ env }) => {
   }
 
   // Log current environment info (only in development)
-  if (nodeEnv === 'development') {
+  if (appEnv === 'development') {
     console.log(`🌐 Strapi Server: ${serverConfig.host}:${serverConfig.port}`);
   }
 
