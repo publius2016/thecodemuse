@@ -1,117 +1,81 @@
-version: '3.8'
-
 services:
-  # CMS Service
   cms:
     build:
-      context: ./cms
+      context: ./thecodemuse/cms
       dockerfile: Dockerfile
     ports:
-      - "1338:1337"  # Different port for staging
+      - "1437:1337"
     env_file:
-      - ./cms/.env
+      - .env.staging
     environment:
-      - NODE_ENV=development
-      - APP_ENV=development
+      - NODE_ENV=production
+      - APP_ENV=staging
       - HOST=0.0.0.0
       - PORT=1337
-      - DEV_DATABASE_HOST=host.docker.internal
-      - DEV_DATABASE_PORT=5432
-      - DEV_DATABASE_NAME=blog_cms
-      - DEV_DATABASE_USERNAME=${DEV_DATABASE_USERNAME}
-      - DEV_DATABASE_PASSWORD=${DEV_DATABASE_PASSWORD}
-      - DEV_DATABASE_SSL=false
-      - DEV_EMAIL_SERVICE_URL=http://email-service:3030
-      - LOG_LEVEL=info
-      - LOG_DIR=/app/logs
-    command: ["npm", "start"]
+    restart: unless-stopped
     volumes:
-      - cms_staging_uploads:/app/public/uploads
-      - cms_staging_logs:/app/logs
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "10"
-        labels: "service=cms,environment=staging"
+      - cms_uploads:/app/public/uploads
     healthcheck:
-      test: ["CMD-SHELL", "node -e \"require('http').get('http://localhost:1337/_health', (res) => { process.exit(res.statusCode === 200 || res.statusCode === 204 ? 0 : 1) })\""]
+      test: ["CMD-SHELL", "node -e \"require('http').get('http://localhost:1337/_health', (res) => process.exit(res.statusCode >= 200 && res.statusCode < 300 ? 0 : 1)).on('error', () => process.exit(1))\""]
       interval: 30s
       timeout: 10s
-      retries: 3
-      start_period: 40s
+      retries: 5
+      start_period: 120s
+    deploy:
+      resources:
+        limits:
+          memory: 1G
 
-  # Frontend Service
   frontend:
     build:
-      context: ./frontend
+      context: ./thecodemuse/frontend
       dockerfile: Dockerfile
       args:
-        - NEXT_PUBLIC_STRAPI_URL=http://localhost:1338
-        - NEXT_PUBLIC_STRAPI_API_URL=http://localhost:1338/api
-        - NEXT_PUBLIC_STRAPI_GRAPHQL_URL=http://localhost:1338/graphql
+        - NEXT_PUBLIC_STRAPI_URL=https://staging.thecodemuse.com/cms
+        - NEXT_PUBLIC_STRAPI_API_URL=https://staging.thecodemuse.com/cms/api
+        - NEXT_PUBLIC_STRAPI_GRAPHQL_URL=https://staging.thecodemuse.com/cms/graphql
     ports:
-      - "3001:3000"  # Different port for staging
+      - "3100:3000"
     environment:
-      - NODE_ENV=staging
+      - NODE_ENV=production
       - STRAPI_SERVER_URL=http://cms:1337
-      - LOG_LEVEL=info
-      - LOG_DIR=/app/logs
     depends_on:
       cms:
         condition: service_healthy
-    volumes:
-      - frontend_staging_logs:/app/logs
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "10"
-        labels: "service=frontend,environment=staging"
+    restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "node -e \"require('http').get('http://localhost:3000/api/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })\""]
+      test: ["CMD-SHELL", "node -e \"require('http').get('http://localhost:3000/api/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) }).on('error', () => process.exit(1))\""]
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 40s
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          memory: 512M
 
-  # Email Service (from external repo)
   email-service:
     build:
-      context: ../muse-email-service
+      context: ./muse-email-service
       dockerfile: Dockerfile
     ports:
-      - "3031:3030"  # Different port for staging
+      - "3130:3030"
+    env_file:
+      - .env.staging
     environment:
       - NODE_ENV=staging
       - PORT=3030
-      - EMAIL_PROVIDER=ethereal
-      - USE_REAL_EMAIL_IN_DEV=true
-      - FROM_EMAIL=noreply@staging.thecodemuse.com
-      - FROM_NAME=The Code Muse (Staging)
-      - ADMIN_EMAIL=admin@staging.thecodemuse.com
-      - API_KEY=staging-api-key
-      - FRONTEND_URL=http://localhost:3001
-      - ADMIN_URL=http://localhost:1338
-      - LOG_LEVEL=info
-      - LOG_FILE=/app/logs/email-service.log
-    volumes:
-      - email_staging_logs:/app/logs
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "10"
-        labels: "service=email-service,environment=staging"
+    restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "node -e \"require('http').get('http://localhost:3030/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })\""]
+      test: ["CMD-SHELL", "node -e \"require('http').get('http://localhost:3030/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) }).on('error', () => process.exit(1))\""]
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 40s
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          memory: 256M
 
 volumes:
-  cms_staging_uploads:
-  cms_staging_logs:
-  frontend_staging_logs:
-  email_staging_logs:
+  cms_uploads:
