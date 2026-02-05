@@ -14,6 +14,7 @@ export default ({ env }) => {
     staging: {
       host: env('STAGING_STRAPI_HOST', '0.0.0.0'),
       port: env.int('STAGING_STRAPI_PORT', 1337),
+      url: env('PUBLIC_URL', 'https://staging.thecodemuse.com/cms'),
     },
     
     production: {

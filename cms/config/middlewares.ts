@@ -5,6 +5,7 @@ export default [
   'strapi::cors',
   'strapi::poweredBy',
   'strapi::query',
+  'global::request-id', // Request ID middleware for tracing
   {
     name: 'strapi::body',
     config: {

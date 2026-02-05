@@ -17,9 +17,18 @@ services:
       - PORT=1337
       - DEV_DATABASE_HOST=host.docker.internal  # Connect to host machine PostgreSQL
       - DEV_EMAIL_SERVICE_URL=http://email-service:3030  # Override with Docker service name
+      - LOG_LEVEL=debug
+      - LOG_DIR=/app/logs
     command: ["npm", "run", "develop"]
     volumes:
       - cms_uploads:/app/public/uploads
+      - cms_logs:/app/logs
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"
+        labels: "service=cms"
     healthcheck:
       test: ["CMD-SHELL", "node -e \"require('http').get('http://localhost:1337/_health', (res) => { process.exit(res.statusCode === 200 || res.statusCode === 204 ? 0 : 1) })\""]
       interval: 30s
@@ -41,9 +50,19 @@ services:
     environment:
       - NODE_ENV=development
       - STRAPI_SERVER_URL=http://cms:1337
+      - LOG_LEVEL=debug
+      - LOG_DIR=/app/logs
     depends_on:
       cms:
         condition: service_healthy
+    volumes:
+      - frontend_logs:/app/logs
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"
+        labels: "service=frontend"
     healthcheck:
       test: ["CMD-SHELL", "node -e \"require('http').get('http://localhost:3000/api/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })\""]
       interval: 30s
@@ -70,6 +89,15 @@ services:
       - FRONTEND_URL=http://localhost:3000
       - ADMIN_URL=http://localhost:1337
       - LOG_LEVEL=debug
+      - LOG_FILE=/app/logs/email-service.log
+    volumes:
+      - email_logs:/app/logs
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"
+        labels: "service=email-service"
     healthcheck:
       test: ["CMD-SHELL", "node -e \"require('http').get('http://localhost:3030/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })\""]
       interval: 30s
@@ -79,3 +107,6 @@ services:
 
 volumes:
   cms_uploads:
+  cms_logs:
+  frontend_logs:
+  email_logs:

@@ -22,9 +22,18 @@ services:
       - DEV_DATABASE_PASSWORD=${DEV_DATABASE_PASSWORD}
       - DEV_DATABASE_SSL=false
       - DEV_EMAIL_SERVICE_URL=http://email-service:3030
+      - LOG_LEVEL=info
+      - LOG_DIR=/app/logs
     command: ["npm", "start"]
     volumes:
       - cms_staging_uploads:/app/public/uploads
+      - cms_staging_logs:/app/logs
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "10"
+        labels: "service=cms,environment=staging"
     healthcheck:
       test: ["CMD-SHELL", "node -e \"require('http').get('http://localhost:1337/_health', (res) => { process.exit(res.statusCode === 200 || res.statusCode === 204 ? 0 : 1) })\""]
       interval: 30s
@@ -46,9 +55,19 @@ services:
     environment:
       - NODE_ENV=staging
       - STRAPI_SERVER_URL=http://cms:1337
+      - LOG_LEVEL=info
+      - LOG_DIR=/app/logs
     depends_on:
       cms:
         condition: service_healthy
+    volumes:
+      - frontend_staging_logs:/app/logs
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "10"
+        labels: "service=frontend,environment=staging"
     healthcheck:
       test: ["CMD-SHELL", "node -e \"require('http').get('http://localhost:3000/api/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })\""]
       interval: 30s
@@ -75,6 +94,15 @@ services:
       - FRONTEND_URL=http://localhost:3001
       - ADMIN_URL=http://localhost:1338
       - LOG_LEVEL=info
+      - LOG_FILE=/app/logs/email-service.log
+    volumes:
+      - email_staging_logs:/app/logs
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "10"
+        labels: "service=email-service,environment=staging"
     healthcheck:
       test: ["CMD-SHELL", "node -e \"require('http').get('http://localhost:3030/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })\""]
       interval: 30s
@@ -84,3 +112,6 @@ services:
 
 volumes:
   cms_staging_uploads:
+  cms_staging_logs:
+  frontend_staging_logs:
+  email_staging_logs:
