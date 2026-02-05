@@ -16,7 +16,12 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Build the application
+# Build arguments for environment-specific builds
+ARG APP_ENV=production
+ENV APP_ENV=${APP_ENV}
+ENV NODE_ENV=production
+
+# Build the application with correct environment for admin panel paths
 RUN npm run build
 
 # Production image, copy all the files and run strapi
